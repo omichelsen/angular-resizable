@@ -22,7 +22,8 @@ angular.module('angularResizable', [])
                 rHeight: '=',
                 rFlex: '=',
                 rGrabber: '@',
-                rDisabled: '@'
+                rDisabled: '@',
+                rDisableThrottle: '='
             },
             link: function(scope, element, attr) {
                 var flexBasis = 'flexBasis' in document.documentElement.style ? 'flexBasis' :
@@ -59,6 +60,10 @@ angular.module('angularResizable', [])
                     info.id = element[0].id;
                 };
 
+                var dispatchDragging = function () {
+                    scope.$emit('angular-resizable.resizing', info);
+                }
+
                 var dragging = function(e) {
                     var prop, offset = axis === 'x' ? start - e.clientX : start - e.clientY;
                     switch(dragDir) {
@@ -80,7 +85,11 @@ angular.module('angularResizable', [])
                             break;
                     }
                     updateInfo();
-                    throttle(function() { scope.$emit('angular-resizable.resizing', info);});
+                    if (scope.rDisableThrottle) {
+                        dispatchDragging();
+                    } else {
+                        throttle(dispatchDragging);
+                    }
                 };
                 var dragEnd = function(e) {
                     updateInfo();
